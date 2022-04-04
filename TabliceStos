@@ -1,0 +1,118 @@
+#include <iostream>
+#include <exception>
+using namespace std;
+
+class FullStack : public std::exception
+{
+public:
+  const char * what () const throw()
+  {
+    return "Stos jest pelny!";
+  }
+};
+class EmptyStack : public std::exception
+{
+public:
+  const char * what () const throw()
+  {
+    return "Stos jest pusty!";
+  }
+};
+
+template <typename E, int size>
+class TabStack{
+private:
+  E *S;
+  int t;
+public:
+  TabStack();
+  ~TabStack();
+   
+  bool empty();
+  E& top();
+  void push(E e);
+  E pop();
+  void clear();
+  void show();
+};
+
+template <typename E, int size>
+TabStack<E, size> :: TabStack()
+{
+  S = new E[size];
+  t = -1;
+}
+
+template <typename E, int size>
+TabStack<E, size> :: ~TabStack()
+{
+  delete[] S;
+} 
+template <typename E, int size> bool TabStack<E,size>::empty() 
+{
+    if (t == -1)
+        return 1;
+    else
+        return 0;
+}
+
+
+template <typename E, int size> 
+E& TabStack<E,size>::top()
+{
+  if (empty()) throw EmptyStack("Stos jest pusty");
+  return S[t];
+}
+
+template <typename E, int size> 
+void TabStack<E,size>::push(E e) 
+{
+  if (t == size - 1) throw FullStack();
+  S[++t] = e;
+}
+template <typename E, int size> 
+E TabStack<E,size>::pop() 
+{
+  if (empty()) throw EmptyStack();
+  E Element = S[t--];
+  return Element;
+}
+template <typename E, int size>
+void TabStack<E,size>::clear()
+{
+  delete[] S;
+  t =-1;
+  S = new E[size];
+}
+template <typename E, int size>
+void TabStack<E,size>::show()
+{
+  if (empty()) throw EmptyStack();
+  for(int i=t;i>=0;i--)
+    {
+      cout << S[i] << endl;
+    }
+  cout << endl << endl;
+  
+}
+int main()
+{
+   TabStack<int,100000> TabStos;
+    
+  try
+  {
+    for(int a=0;a<100000;a++)
+    {
+    	TabStos.push(a);
+    }
+  }
+    
+  catch(EmptyStack &e)
+  {
+    cout << e.what() << endl;
+  }
+  catch(FullStack &e)
+  {
+    cout << e.what() << endl;
+  }
+}

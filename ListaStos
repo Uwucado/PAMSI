@@ -1,0 +1,208 @@
+#include <iostream>
+#include <exception>
+using namespace std;
+class FullStack : public std::exception
+{
+public:
+  const char * what () const throw()
+  {
+    return "Stos jest pelny!";
+  }
+};
+class EmptyStack : public std::exception
+{
+public:
+  const char * what () const throw()
+  {
+    return "Stos jest pusty!";
+  }
+};
+
+
+template <typename E>
+class Node
+{ 
+public:
+E element; 
+Node <E>* next;
+};
+
+
+
+template <typename E>
+class LinkedList
+{
+public:
+  LinkedList(); 
+  ~LinkedList();
+  bool empty(); 
+  E& front();
+  void showall();
+  void cleanall();
+  void addFront(E e);
+  void removeFront();
+private:
+  Node<E>* head; 
+};
+
+template <typename E>
+LinkedList<E>::LinkedList()
+{
+  head=NULL;
+}
+
+template <typename E>
+bool LinkedList<E>::empty() 
+{
+  return head == NULL;
+}
+
+template <typename E>
+E& LinkedList<E>::front() 
+{
+  return head->elem;
+}
+
+
+
+template <typename E>
+LinkedList<E>:: ~LinkedList() 
+{
+  while (!empty())
+    {
+      removeFront();
+    }
+}
+
+template <typename E>
+void LinkedList<E>::addFront(E e)
+{ 
+Node <E>* NE = new Node<E>; 
+NE->element = e; 
+NE->next = head; 
+head = NE; 
+}
+template <typename E>
+void LinkedList<E>::removeFront()
+{
+Node<E>* old = head; 
+head = old->next; 
+delete old; 
+}
+
+template <typename E>
+void LinkedList<E>::showall()
+{
+  Node<E>* odcz;
+ 
+    if (head == NULL)
+    {
+      cout << "Lista jest pusta" << endl;
+    }
+    else
+    {
+        odcz = head;
+        while (odcz != NULL)
+	  {
+	    cout << odcz->element << endl;
+            odcz = odcz->next;
+	  }
+    }
+}
+
+template <typename E>
+void LinkedList<E>::cleanall()
+{
+   while (!empty())
+    {
+      removeFront();
+    }
+}
+
+template <typename E>
+class ListStack{
+private:
+  LinkedList <E> S;
+  int n;
+public:
+  ListStack();
+   
+  bool empty();
+  E& top();
+  void push(E e);
+  void pop();
+  void clear();
+  void show();
+};
+
+
+template <typename E>
+ListStack<E> ::ListStack()
+: S(), n(0) { } 
+
+template <typename E>
+bool ListStack<E>::empty() 
+{
+    if (n == 0)
+        return 1;
+    else
+        return 0;
+}
+
+
+template <typename E> 
+E& ListStack<E>::top()
+{
+  if (empty()) throw EmptyStack("Stos jest pusty");
+  return S.front();
+}
+
+template <typename E> 
+void ListStack<E>::push(E e) 
+{
+  ++n;
+  S.addFront(e);
+}
+
+template <typename E> 
+void ListStack<E>::pop() 
+{
+  if (empty()) throw EmptyStack();
+  --n;
+  S.removeFront();
+}
+template <typename E>
+void ListStack<E>::clear()
+{
+  S.cleanall();
+  n=0;
+}
+template <typename E>
+void ListStack<E>::show()
+{
+  if (empty()) throw EmptyStack();
+  S.showall();
+  cout << endl << endl;
+  
+}
+int main()
+{
+  ListStack<int> ListStos;  
+  try
+  { 
+    for(int a=0;a<100000;a++)
+      {
+	ListStos.push(a);
+      }
+    
+  }
+    
+  catch(EmptyStack &e)
+  {
+    cout << e.what() << endl;
+  }
+  catch(FullStack &e)
+  {
+    cout << e.what() << endl;
+  }
+}

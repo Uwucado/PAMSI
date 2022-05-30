@@ -1,0 +1,273 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <time.h>
+using namespace std;
+
+/*Jako SIZE definujemy wybraną ilość elementow*/
+
+#define SIZE 1000000
+struct Tytul_i_Ocena
+{
+  int Pozycja =0;
+  string Tytul ="";
+  int Ocena =0;
+};
+/*Inicjalizujemy Tablicę naszej klasy*/
+Tytul_i_Ocena Tab[SIZE];
+/*
+  Do funkcji UsunNawiasy na wejście podajemy plik z listą
+  filmow, ktora bedziemy sortowac.
+  W srodku fukcji wczytujemycala linie,
+  rodzielamy ja na Pozycje,Tytul i Ocene. W celu otrzymaniu
+  Oceny bierzemy ostatnie 3 lub 4 znaki z linii w uzywamy komendy
+  "stoi" by otrzymac wartosc int.
+  Nastepnie usuwamy niepotrzebne znaki w Tytule.
+  Na wyjscie zostaje podana ilosc usunietych pol bez Oceny.
+*/
+  
+int UsunNawiasy(ifstream& infile)
+{
+  int Puste=0;
+  string Kopia="";
+  string Poz="";
+  for(int o=0; o<SIZE-Puste ; ++o) 
+    {
+      getline(infile, Poz, ','); 
+      Tab[o].Pozycja=o; 
+      getline(infile, Tab[o].Tytul, '\n'); 
+      int pos =Tab[o].Tytul.size();
+      //Ostatnie 4 znaki bedziemy traktowac jako ocene
+      Kopia=Tab[o].Tytul.substr (pos-4);
+      //Sprawdzamy czy na ostatnim miejscu w linii znajduje sie '0'
+      if(Kopia[3]=='0')
+	{
+	  Tab[o].Tytul=Tab[o].Tytul.substr (0,pos-4);
+	  //W zaleznosci czy liczba wynosila 10.0 czy np.7.0
+	  //musimy usunac dodatkowy znak ,
+	  if(Kopia.front()==',')
+	    {
+	      Kopia.erase(0,1);
+	      Tab[o].Ocena=stoi(Kopia);
+	    }
+	  else
+	    {
+	      Tab[o].Ocena=stoi(Kopia);
+	      pos =Tab[o].Tytul.size();
+	      Tab[o].Tytul=Tab[o].Tytul.substr (0,pos-1);
+	    }
+	  //Sprawdzamy czy trzeba usunac "
+	  if(Tab[o].Tytul.front()=='"')
+	    {
+	      pos =Tab[o].Tytul.size();
+	      Tab[o].Tytul=Tab[o].Tytul.substr (1,pos-2);
+	    }
+	}
+      //W przeciwnym wypadku pomijamy te linie 
+      else
+	{
+	  Puste++;
+	  o=o-1;
+	}
+    }
+  return Puste;
+}
+/*
+  QUICKSORT IN-PLACE
+  W funkcji partition jako pivot wybieramy
+  najbardziej prawy element w naszej Tablicy
+*/
+void quickSort(int a, int b)
+{
+  if (a<b)
+    {
+      int pivot = Tab[b].Ocena;
+      int left=a;
+      int right=b-1;
+      while(left<=right)
+	{
+	  //Szukamy pierwszego elementu od lewej ktory jest mniejszy od pivotu
+	  while(left<=right && Tab[left].Ocena < pivot)
+	    {
+	      left=left+1;
+	    }
+	  //Wartosci rowne z pivotem lub wieksze znajda sie po prawej stronie
+	  while(right>=left && Tab[right].Ocena >= pivot)
+	    {
+	      right = right - 1;
+	    }
+	  if(left<right)
+	    {
+	      // Zamieniamy wartosci
+	      swap(Tab[left].Ocena,Tab[right].Ocena);
+	      swap(Tab[left].Tytul,Tab[right].Tytul);
+	    }
+	  
+	}
+      // Na koniec zamieniamy pivot na jego miejsce
+      swap(Tab[left].Ocena,Tab[b].Ocena);
+      swap(Tab[left].Tytul,Tab[b].Tytul);
+      quickSort(a,left-1);
+      quickSort(left+1,b);
+    }
+}
+
+/*
+  MERGE SORT
+  Do funkcji merg będziemy potrzebowali
+  tablicę d o rozmiarze[SIZE].
+  Na wejscie podajemy graniczne indexy(a,b) oraz index srodkowy(c)
+*/
+Tytul_i_Ocena d[SIZE];
+void MergeMove( int a, int b, int c)
+{
+    int i, j, k;
+    i = a;
+    k = a;
+    j = c + 1;
+    // Wynokujemy dopoki i(lewa) jest <= c(srodek)
+    // oraz j(srodek+1)<=b(prawa)
+    while (i <= c && j <= b) {
+        if (Tab[i].Ocena < Tab[j].Ocena) {
+	  //Wartosci wrzycamy do tablicy roboczej d
+            d[k].Ocena = Tab[i].Ocena;
+	    d[k].Tytul = Tab[i].Tytul;
+            k++;
+            i++;
+        }
+        else  {
+            d[k].Ocena = Tab[j].Ocena;
+	    d[k].Tytul = Tab[j].Tytul;
+            k++;
+            j++;
+        }
+    }
+    while (i <= c) {
+        d[k].Ocena = Tab[i].Ocena;
+	d[k].Tytul = Tab[i].Tytul;
+        k++;
+        i++;
+    }
+    while (j <= b) {
+        d[k].Ocena = Tab[j].Ocena;
+	d[k].Tytul = Tab[j].Tytul;
+        k++;
+        j++;
+    }
+    // Na koniec wsadzamy elementy z tablicy d do Tab
+    for (i = a; i < k; i++)  {
+        Tab[i].Ocena = d[i].Ocena;
+	Tab[i].Tytul = d[i].Tytul;
+    }
+}
+/*
+  Zmienna c będzie środkiem naszej tablicy
+ */
+void mergesort( int a, int b)
+{
+    int c;
+    if (a < b){
+        
+        c=(a+b)/2;
+        mergesort(a,c); // Sortujemy lewa czesc
+        mergesort(c+1,b); // Sortujemy prawa czesc
+        MergeMove(a,b,c);
+    }
+}
+
+/*
+  W sortowaniu kubelkowym inicjalizuje tablice
+  Bucket dwuwymiarową. Pierwszy wymiar bedzie
+  oznaczal oceny filmu, od 0 do 10. Drugi
+  wymiar tablicy bedzie przechowywal
+  kolejne elementy z odpowiednia ocena.
+ */
+Tytul_i_Ocena Bucket[11][SIZE];
+/*
+  Na wejscie bucketSort podajemy ostatni
+  index tablicy do ktorego bedziemy sortowac
+ */
+void bucketSort(int b)
+{
+  // BucketSize mowi ile mamy elementow o danej ocenie
+  int BucketSize[11]={0};
+  //Nastepnie wsadzamy kolejne elementy do kolejnych kubelkow
+  for(int p=0;p<b;p++)
+    {
+      int oc=(Tab[p].Ocena);
+      Bucket[oc][(BucketSize[oc])].Tytul=Tab[p].Tytul;
+      Bucket[oc][(BucketSize[oc])].Ocena=Tab[p].Ocena;
+      BucketSize[oc]= BucketSize[oc]+1;
+      
+    }
+  // Zmienna IleBylo mowi nam ile elementow juz posortowalismy
+
+  // Na koniec wsadzamy elementy z kubelkow do Tablicy
+  // w wyniku czego otrzymujemy posortowana tablice
+  int IleBylo=0;
+  for(int o=1;o<11;o++)
+    {
+     
+      for(int u=0;u<BucketSize[o];u++)
+	{
+	  Tab[IleBylo+u].Ocena=Bucket[o][u].Ocena;
+	  Tab[IleBylo+u].Tytul=Bucket[o][u].Tytul;
+	}
+     IleBylo=IleBylo+BucketSize[o];
+    }
+  
+}
+
+int main()
+{
+  clock_t start,end;
+  int PustePola;
+  ifstream inFile;
+  string Jakis;
+  // Otwieramy plik i sprawdzamy czy sie otworzyl
+  inFile.open("projekt2_dane.csv");
+  if (inFile.is_open()) {
+    cout << "Udal sie odczyt z pliku" << endl;
+  }
+  else {
+    cout << "Brak otwarcia pliku" << endl;
+  }
+  inFile >> Jakis;
+  
+  PustePola=UsunNawiasy(inFile);
+ 
+  inFile.close();
+  // Funkcja clock() sprawdzamy wykorzystane czas
+  start=clock();
+  //mergesort(0,SIZE-1-PustePola);
+  //quickSort(0,(SIZE-1-PustePola));
+  //bucketSort(SIZE-PustePola);
+  end=clock(); 
+  int Poprawnosc=0;
+  double Srednia=0;
+  for(int j=0; j<SIZE-PustePola ; ++j)
+    {
+      Srednia=Srednia+Tab[j].Ocena;
+      //cout  <<  '|' << Tab[j].Pozycja << '|' << Tab[j].Tytul << '|' << Tab[j].Ocena << endl ;
+    }
+  //Petla sprawdzajaca poprawnosc posortowania
+  for(int j=1; j<SIZE-PustePola ; ++j)
+    {
+      if(Tab[j].Ocena<Tab[j-1].Ocena) {Poprawnosc=1+Poprawnosc;}
+    }
+  if(Poprawnosc == 0)
+    {
+      cout << "Poprawnie posortowane!" << '\n';
+    }
+  else
+    {
+      cout << "Niepoprawnie posortowane!" << '\n';
+    }
+  cout << "Usunieto " << PustePola << " pustych pol" << '\n';
+  Srednia = Srednia/(SIZE-PustePola-1);
+  double time_taken = double(end - start) / double(CLOCKS_PER_SEC);
+  cout << "Zajelo to:" << time_taken << endl;
+  cout << "Mediana wynosi = " << Tab[(SIZE/2)-1].Ocena << '\n';
+  cout << "Srednia wynosi = " << Srednia << '\n';
+}
